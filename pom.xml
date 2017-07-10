@@ -7,19 +7,6 @@
 	<groupId>com.github.alexkolpa</groupId>
 	<artifactId>cashbook</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
 
 	<properties>
 		<resteasy.version>3.1.1.Final</resteasy.version>
@@ -109,10 +96,6 @@
 			<version>${guice.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netflix.governator</groupId>
-			<artifactId>governator-core</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>1.16.10</version>
@@ -154,5 +137,102 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<finalName>relations-server</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>${project.build.directory}/generated-resources/jooq</directory>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jooq</groupId>
+				<artifactId>jooq-codegen-maven</artifactId>
+				<version>3.8.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>9.4-1203-jdbc42</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<jdbc>
+						<driver>org.postgresql.Driver</driver>
+						<url>${db.host}/${db.name}</url>
+						<user>${db.user}</user>
+						<password>${db.pass}</password>
+					</jdbc>
+					<generator>
+						<database>
+							<name>org.jooq.util.postgres.PostgresDatabase</name>
+							<includes>.*</includes>
+							<excludes>databasechangelog | databasechangeloglock</excludes>
+							<inputSchema>public</inputSchema>
+							<customTypes>
+								<customType>
+									<name>LocalDate</name>
+									<type>java.time.LocalDate</type>
+									<converter>com.github.alexkolpa.cashbook.db.LocalDateConverter</converter>
+								</customType>
+							</customTypes>
+							<forcedTypes>
+								<forcedType>
+									<name>LocalDate</name>
+									<types>date</types>
+								</forcedType>
+							</forcedTypes>
+						</database>
+						<target>
+							<packageName>me.magnet.relations.entities</packageName>
+							<directory>target/generated-sources/jooq</directory>
+						</target>
+					</generator>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.liquibase</groupId>
+				<artifactId>liquibase-maven-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
+					<dropFirst>true</dropFirst>
+					<changeLogFile>src/main/resources/changelog.xml</changeLogFile>
+					<driver>org.postgresql.Driver</driver>
+					<url>${db.host}/${db.name}</url>
+					<username>${db.user}</username>
+					<password>${db.pass}</password>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>update</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
