@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.github.alexkolpa.cashbook.db.JooqModule;
 import com.github.alexkolpa.cashbook.db.LiquibaseMigrator;
+import com.github.alexkolpa.cashbook.endpoints.ApiModule;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
@@ -61,7 +62,10 @@ public class Server {
 		String user = System.getenv().get("JDBC_USER");
 		String pass = System.getenv().get("JDBC_PASS");
 
-		List<Module> modules = Lists.newArrayList(new JooqModule(url, user, pass));
+		List<Module> modules = Lists.newArrayList();
+		modules.add(new JooqModule(url, user, pass));
+		modules.add(new ApiModule());
+
 		injector = Guice.createInjector(modules);
 	}
 
