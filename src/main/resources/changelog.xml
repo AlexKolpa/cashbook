@@ -1,4 +1,114 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+	<changeSet id="init_db" author="alexkolpa">
+		<createTable tableName="categories">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="name" type="text">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<createTable tableName="sub_categories">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="category_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="text">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<sql><![CDATA[ALTER TABLE categories ADD CONSTRAINT name_length CHECK (length(name) > 0);]]></sql>
+		<sql><![CDATA[ALTER TABLE sub_categories ADD CONSTRAINT name_length CHECK (length(name) > 0);]]></sql>
+
+		<addForeignKeyConstraint baseTableName="sub_categories" baseColumnNames="category_id"
+		                         constraintName="sub_category_has_category"
+		                         referencedTableName="categories"
+		                         referencedColumnNames="id"
+		                         onDelete="CASCADE"/>
+
+		<createTable tableName="flows">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="date" type="date" defaultValueComputed="NOW()">
+				<constraints nullable="false"/>
+			</column>
+			<column name="category_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+			<column name="sub_category_id" type="bigint">
+				<constraints nullable="true"/>
+			</column>
+			<column name="description" type="text"/>
+			<column name="cost" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseTableName="flows" baseColumnNames="category_id"
+		                         constraintName="flow_has_category"
+		                         referencedTableName="categories"
+		                         referencedColumnNames="id"/>
+		<addForeignKeyConstraint baseTableName="flows" baseColumnNames="sub_category_id"
+		                         constraintName="flow_has_sub_category"
+		                         referencedTableName="sub_categories"
+		                         referencedColumnNames="id"/>
+		<createIndex tableName="flows" indexName="flow_cost">
+			<column name="cost"/>
+		</createIndex>
+		<createIndex tableName="flows" indexName="flow_category">
+			<column name="category_id"/>
+		</createIndex>
+		<createIndex tableName="flows" indexName="flow_sub_category">
+			<column name="sub_category_id"/>
+		</createIndex>
+		<createIndex tableName="flows" indexName="flow_date">
+			<column name="date"/>
+		</createIndex>
+
+		<sql><![CDATA[ DROP TYPE IF EXISTS flow_interval; ]]></sql>
+		<sql><![CDATA[ CREATE TYPE flow_interval AS ENUM ('DAILY', 'WEEKLY','MONTHLY','YEARLY');]]></sql>
+		<createTable tableName="recurring_flows">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="date" type="date" defaultValueComputed="NOW()">
+				<constraints nullable="false"/>
+			</column>
+			<column name="category_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+			<column name="sub_category_id" type="bigint">
+				<constraints nullable="true"/>
+			</column>
+			<column name="description" type="text">
+				<constraints nullable="false"/>
+			</column>
+			<column name="cost" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+			<column name="interval" type="flow_interval">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<createIndex tableName="recurring_flows" indexName="recurring_flow_cost">
+			<column name="cost"/>
+		</createIndex>
+		<createIndex tableName="recurring_flows" indexName="recurring_flow_category">
+			<column name="category_id"/>
+		</createIndex>
+		<createIndex tableName="recurring_flows" indexName="recurring_flow_sub_category">
+			<column name="sub_category_id"/>
+		</createIndex>
+		<createIndex tableName="recurring_flows" indexName="recurring_flow_date">
+			<column name="date"/>
+		</createIndex>
+		<createIndex tableName="recurring_flows" indexName="recurring_flow_interval">
+			<column name="interval"/>
+		</createIndex>
+	</changeSet>
 </databaseChangeLog>
