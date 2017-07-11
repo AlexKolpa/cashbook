@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.github.alexkolpa.cashbook.db.ContextProvider;
 import com.github.alexkolpa.cashbook.db.Flows;
 import com.github.alexkolpa.cashbook.models.Flow;
 import com.github.alexkolpa.cashbook.models.mappers.FlowModels;
@@ -32,42 +33,39 @@ import org.jooq.DSLContext;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__(@Inject))
 public class FlowResource {
 
-	private final Provider<DSLContext> contextProvider;
+	private final ContextProvider contextProvider;
 
 	@GET
 	public List<Flow> getFlows(@QueryParam("limit") int limit, @QueryParam("offset") int offset,
 			@QueryParam("category") Set<Long> categories) {
-		try (DSLContext context = contextProvider.get()) {
-			return Flows.list(context, limit, offset, categories)
-					.stream()
-					.map(FlowModels::toModel)
-					.collect(Collectors.toList());
-		}
+		return contextProvider.transactionResult(
+				context -> Flows.list(context, limit, offset, categories)
+						.stream()
+						.map(FlowModels::toModel)
+						.collect(Collectors.toList()));
 	}
 
 	@POST
 	public Flow createFlow(Flow flow) {
-		try (DSLContext context = contextProvider.get()) {
+		return contextProvider.transactionResult(context -> {
 			FlowsRecord record = FlowModels.toRecord(flow);
 			return FlowModels.toModel(Flows.create(context, record));
-		}
+		});
 	}
 
 	@PUT
 	@Path("{id:\\d+}")
 	public Flow updateFlow(@PathParam("id") long id, Flow flow) {
-		try (DSLContext context = contextProvider.get()) {
-			return Flows.update(context, id, FlowModels.toRecord(flow))
-					.map(FlowModels::toModel)
-					.orElseThrow(NotFoundException::new);
-		}
+		return contextProvider.transactionResult(
+				context -> Flows.update(context, id, FlowModels.toRecord(flow))
+						.map(FlowModels::toModel)
+						.orElseThrow(NotFoundException::new));
 	}
 
 	@DELETE
 	@Path("{id:\\d+}")
 	public void delete(@PathParam("id") long id) {
-		try (DSLContext context = contextProvider.get()) {
-			Flows.delete(context, id).orElseThrow(NotFoundException::new);
-		}
+		contextProvider.transaction(
+				context -> Flows.delete(context, id).orElseThrow(NotFoundException::new));
 	}
 }

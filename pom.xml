@@ -218,7 +218,7 @@
 						<schema>public</schema>
 					</schemas>
 					<locations>
-						<location>filesystem:./src/main/resources/migrations</location>
+						<location>classpath:migrations</location>
 					</locations>
 				</configuration>
 				<dependencies>

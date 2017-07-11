@@ -8,12 +8,16 @@ import java.util.Set;
 
 import me.magnet.relations.entities.tables.records.FlowsRecord;
 import org.jooq.DSLContext;
+import org.jooq.SelectWhereStep;
 
 public class Flows {
 	public static List<FlowsRecord> list(DSLContext context, int limit, int offset,
 			Set<Long> categories) {
-		return context.selectFrom(FLOWS)
-				.where(FLOWS.CATEGORY_ID.in(categories))
+		SelectWhereStep<FlowsRecord> flowsRecords = context.selectFrom(FLOWS);
+		if(!categories.isEmpty()) {
+			flowsRecords.where(FLOWS.CATEGORY_ID.in(categories));
+		}
+		return flowsRecords
 				.orderBy(FLOWS.DATE.desc())
 				.limit(limit)
 				.offset(offset)

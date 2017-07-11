@@ -7,7 +7,9 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
+import com.mchange.v1.util.ArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 
@@ -34,6 +36,12 @@ public class DBMigrator {
 		flyway.setDataSource(dataSource);
 		flyway.setLocations(LOCATION);
 		return flyway;
+	}
+
+	public void setLocations(String... locations) {
+		String[] newLocations = Arrays.copyOf(locations, locations.length + 1);
+		newLocations[locations.length] = LOCATION;
+		flyway.setLocations(newLocations);
 	}
 
 	public void migrate(Action action) throws SQLException {

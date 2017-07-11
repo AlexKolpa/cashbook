@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.github.alexkolpa.cashbook.db.ContextProvider;
 import com.github.alexkolpa.cashbook.db.SubCategories;
 import com.github.alexkolpa.cashbook.models.Category;
 import com.github.alexkolpa.cashbook.models.SubCategory;
@@ -35,41 +36,37 @@ import org.jooq.DSLContext;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__(@Inject))
 public class SubCategoriesResource {
 
-	private final Provider<DSLContext> contextProvider;
+	private final ContextProvider contextProvider;
 
 	@GET
 	public List<SubCategory> listSubCategories() {
-		try (DSLContext context = contextProvider.get()) {
-			return SubCategories.list(context)
-					.stream()
-					.map(SubCategoryModels::toModel)
-					.collect(Collectors.toList());
-		}
+		return contextProvider.transactionResult(context -> SubCategories.list(context)
+				.stream()
+				.map(SubCategoryModels::toModel)
+				.collect(Collectors.toList()));
 	}
 
 	@POST
 	public SubCategory create(SubCategory subCategory) {
-		try (DSLContext context = contextProvider.get()) {
+		return contextProvider.transactionResult(context -> {
 			SubCategoriesRecord record = SubCategoryModels.toRecord(subCategory);
 			return SubCategoryModels.toModel(SubCategories.create(context, record));
-		}
+		});
 	}
 
 	@PUT
 	@Path("{id:\\d+}")
 	public SubCategory update(@PathParam("id") long id, SubCategory subCategory) {
-		try (DSLContext context = contextProvider.get()) {
-			return SubCategories.update(context, id, SubCategoryModels.toRecord(subCategory))
-					.map(SubCategoryModels::toModel)
-					.orElseThrow(NotFoundException::new);
-		}
+		return contextProvider.transactionResult(context -> SubCategories.update(context, id,
+				SubCategoryModels.toRecord(subCategory))
+				.map(SubCategoryModels::toModel)
+				.orElseThrow(NotFoundException::new));
 	}
 
 	@DELETE
 	@Path("{id:\\d+}")
 	public void delete(@PathParam("id") long id) {
-		try (DSLContext context = contextProvider.get()) {
-			SubCategories.delete(context, id).orElseThrow(NotFoundException::new);
-		}
+		contextProvider.transaction(
+				context -> SubCategories.delete(context, id).orElseThrow(NotFoundException::new));
 	}
 }

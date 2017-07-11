@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.github.alexkolpa.cashbook.db.ContextProvider;
 import com.github.alexkolpa.cashbook.db.Flows;
 import com.github.alexkolpa.cashbook.db.RecurringFlows;
 import com.github.alexkolpa.cashbook.models.Flow;
@@ -38,44 +39,41 @@ import org.jooq.DSLContext;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__(@Inject))
 public class RecurringFlowResource {
 
-	private final Provider<DSLContext> contextProvider;
+	private final ContextProvider contextProvider;
 
 	@GET
 	public List<RecurringFlow> getRecurringFlows(@QueryParam("limit") int limit,
 			@QueryParam("offset") int offset, @QueryParam("category") Set<Long> categories,
 			@QueryParam("max-interval") FlowInterval interval) {
-		try (DSLContext context = contextProvider.get()) {
-			return RecurringFlows.list(context, limit, offset, categories, interval)
-					.stream()
-					.map(RecurringFlowModels::toModel)
-					.collect(Collectors.toList());
-		}
+		return contextProvider.transactionResult(
+				context -> RecurringFlows.list(context, limit, offset, categories, interval)
+						.stream()
+						.map(RecurringFlowModels::toModel)
+						.collect(Collectors.toList()));
 	}
 
 	@POST
 	public RecurringFlow createRecurringFlow(RecurringFlow recurringFlow) {
-		try (DSLContext context = contextProvider.get()) {
+		return contextProvider.transactionResult(context -> {
 			RecurringFlowsRecord record = RecurringFlowModels.toRecord(recurringFlow);
 			return RecurringFlowModels.toModel(RecurringFlows.create(context, record));
-		}
+		});
 	}
 
 	@PUT
 	@Path("{id:\\d+}")
 	public RecurringFlow updateRecurringFlow(@PathParam("id") long id,
 			RecurringFlow recurringFlow) {
-		try (DSLContext context = contextProvider.get()) {
-			return RecurringFlows.update(context, id, RecurringFlowModels.toRecord(recurringFlow))
-					.map(RecurringFlowModels::toModel)
-					.orElseThrow(NotFoundException::new);
-		}
+		return contextProvider.transactionResult(context -> RecurringFlows.update(context, id,
+				RecurringFlowModels.toRecord(recurringFlow))
+				.map(RecurringFlowModels::toModel)
+				.orElseThrow(NotFoundException::new));
 	}
 
 	@DELETE
 	@Path("{id:\\d+}")
 	public void delete(@PathParam("id") long id) {
-		try (DSLContext context = contextProvider.get()) {
-			RecurringFlows.delete(context, id).orElseThrow(NotFoundException::new);
-		}
+		contextProvider.transaction(
+				context -> RecurringFlows.delete(context, id).orElseThrow(NotFoundException::new));
 	}
 }
