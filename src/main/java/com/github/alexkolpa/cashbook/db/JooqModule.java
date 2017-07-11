@@ -1,6 +1,6 @@
 package com.github.alexkolpa.cashbook.db;
 
-import javax.inject.Provider;
+import javax.sql.DataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,17 +30,17 @@ public class JooqModule extends AbstractModule {
 	}
 
 	@Provides
-	public Connection getConnection() throws SQLException {
-		return pool.getConnection();
+	public DataSource getDataSource() {
+		return pool;
 	}
 
 	@Provides
-	public DSLContext getContext(Provider<Connection> connections) {
+	public DSLContext getContext() {
 		ConnectionProvider connectionProvider = new ConnectionProvider() {
 			@Override
 			public Connection acquire() throws DataAccessException {
 				try {
-					Connection connection = connections.get();
+					Connection connection = pool.getConnection();
 					connection.setAutoCommit(false);
 					return connection;
 				}

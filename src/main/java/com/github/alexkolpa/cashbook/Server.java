@@ -5,15 +5,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.github.alexkolpa.cashbook.db.DBMigrator;
 import com.github.alexkolpa.cashbook.db.JooqModule;
-import com.github.alexkolpa.cashbook.db.LiquibaseMigrator;
 import com.github.alexkolpa.cashbook.endpoints.ApiModule;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import liquibase.exception.LiquibaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.plugins.guice.ModuleProcessor;
 import org.jboss.resteasy.plugins.server.netty.NettyJaxrsServer;
@@ -24,7 +23,6 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 @Slf4j
 public class Server {
 
-	private static final String CHANGELOG = "changelog.xml";
 	private static final int PORT = 8080;
 
 	public static void main(String[] args) {
@@ -41,7 +39,7 @@ public class Server {
 		try {
 			migrateDb();
 		}
-		catch (LiquibaseException | SQLException e) {
+		catch (SQLException e) {
 			log.error("Unable to migrate DB", e);
 			return;
 		}
@@ -69,18 +67,12 @@ public class Server {
 		injector = Guice.createInjector(modules);
 	}
 
-	private void migrateDb() throws SQLException, LiquibaseException {
-		LiquibaseMigrator.Action migrate = Optional.ofNullable(System.getenv().get("MIGRATE"))
-				.map(LiquibaseMigrator.Action::valueOf)
-				.orElse(LiquibaseMigrator.Action.NOP);
+	private void migrateDb() throws SQLException {
+		DBMigrator.Action migrate = Optional.ofNullable(System.getenv().get("MIGRATE"))
+				.map(DBMigrator.Action::valueOf)
+				.orElse(DBMigrator.Action.NOP);
 
-		Set<String> dbFiles = Sets.newHashSet(CHANGELOG);
-		Optional.ofNullable(System.getenv().get("FIXTURES"))
-				.map(s -> s.split(","))
-				.map(Sets::newHashSet)
-				.ifPresent(dbFiles::addAll);
-
-		injector.getInstance(LiquibaseMigrator.class).migrate(migrate, dbFiles);
+		injector.getInstance(DBMigrator.class).migrate(migrate);
 	}
 
 	private void startServer() {

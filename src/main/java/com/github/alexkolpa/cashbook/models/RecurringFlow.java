@@ -13,7 +13,7 @@ public class RecurringFlow {
 	private LocalDate date;
 	private Entity category;
 	private Entity subCategory;
-	private String description;
+	private String name;
 	private long cost;
 	private FlowInterval interval;
 }

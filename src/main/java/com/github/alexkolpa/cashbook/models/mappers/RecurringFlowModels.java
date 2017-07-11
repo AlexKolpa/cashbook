@@ -16,7 +16,7 @@ public class RecurringFlowModels {
 						.orElse(null))
 				.setDate(record.getDate())
 				.setCost(record.getCost())
-				.setDescription(record.getDescription())
+				.setName(record.getName())
 				.setInterval(record.getInterval());
 	}
 
@@ -26,7 +26,7 @@ public class RecurringFlowModels {
 		Optional.ofNullable(flow.getSubCategory())
 				.map(Entity::getId)
 				.ifPresent(record::setSubCategoryId);
-		record.setDescription(flow.getDescription());
+		record.setName(flow.getName());
 		record.setDate(flow.getDate());
 		record.setCost(flow.getCost());
 		record.setInterval(flow.getInterval());

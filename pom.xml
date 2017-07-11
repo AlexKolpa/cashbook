@@ -14,32 +14,28 @@
 		<jackson.version>2.8.6</jackson.version>
 		<guice.version>4.1.0</guice.version>
 		<slf4j.version>1.7.21</slf4j.version>
+		<postgres.version>42.1.1.jre7</postgres.version>
+		<flyway.version>4.2.0</flyway.version>
 
 		<mockito.version>1.10.19</mockito.version>
 		<junit.version>4.12</junit.version>
 
 		<db.user>cashbook</db.user>
 		<db.pass>cashbook-secret</db.pass>
-		<db.host>jdbc:postgresql://localhost:5432</db.host>
-		<db.name>cashbook</db.name>
+		<db.url>jdbc:postgresql://localhost:5432/cashbook</db.url>
 	</properties>
 
 	<dependencies>
 		<!-- DB -->
 		<dependency>
-			<groupId>org.liquibase</groupId>
-			<artifactId>liquibase-core</artifactId>
-			<version>3.5.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.mattbertolini</groupId>
-			<artifactId>liquibase-slf4j</artifactId>
-			<version>2.0.0</version>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>${flyway.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>9.4.1212.jre7</version>
+			<version>${postgres.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mchange</groupId>
@@ -179,7 +175,7 @@
 				<configuration>
 					<jdbc>
 						<driver>org.postgresql.Driver</driver>
-						<url>${db.host}/${db.name}</url>
+						<url>${db.url}</url>
 						<user>${db.user}</user>
 						<password>${db.pass}</password>
 					</jdbc>
@@ -211,23 +207,33 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<version>3.5.1</version>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>${flyway.version}</version>
 				<configuration>
-					<promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
-					<dropFirst>true</dropFirst>
-					<changeLogFile>src/main/resources/changelog.xml</changeLogFile>
-					<driver>org.postgresql.Driver</driver>
-					<url>${db.host}/${db.name}</url>
-					<username>${db.user}</username>
+					<url>${db.url}</url>
+					<user>${db.user}</user>
 					<password>${db.pass}</password>
+					<schemas>
+						<schema>public</schema>
+					</schemas>
+					<locations>
+						<location>filesystem:./src/main/resources/migrations</location>
+					</locations>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>${postgres.version}</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<phase>initialize</phase>
 						<goals>
-							<goal>update</goal>
+							<goal>clean</goal>
+							<goal>migrate</goal>
 						</goals>
 					</execution>
 				</executions>
