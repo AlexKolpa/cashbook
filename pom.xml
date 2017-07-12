@@ -135,7 +135,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>relations-server</finalName>
+		<finalName>cashbook</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -177,7 +177,6 @@
 						<driver>org.postgresql.Driver</driver>
 						<url>${db.url}</url>
 						<user>${db.user}</user>
-						<password>${db.pass}</password>
 					</jdbc>
 					<generator>
 						<database>
@@ -213,13 +212,9 @@
 				<configuration>
 					<url>${db.url}</url>
 					<user>${db.user}</user>
-					<password>${db.pass}</password>
 					<schemas>
 						<schema>public</schema>
 					</schemas>
-					<locations>
-						<location>classpath:migrations</location>
-					</locations>
 				</configuration>
 				<dependencies>
 					<dependency>

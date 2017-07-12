@@ -1,15 +1,11 @@
 package com.github.alexkolpa.cashbook.db;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.sql.DataSource;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 
-import com.mchange.v1.util.ArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 
@@ -17,7 +13,7 @@ import org.flywaydb.core.Flyway;
 public class DBMigrator {
 
 	private static final String SCHEMA = "public";
-	private static final String LOCATION = "migrations";
+	private static final String LOCATION = "db/migration";
 
 	public enum Action {
 		DROP_CREATE, UPDATE, NOP

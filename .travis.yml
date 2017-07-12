@@ -1,0 +1,20 @@
+dist: trusty
+install: true
+language: java
+jdk:
+  - oraclejdk8
+
+env:
+  global:
+    - JDBC_URL="jdbc:postgresql://localhost:5432/travis"
+    - JDBC_USER="travis"
+    - MIGRATE="DROP_CREATE"
+
+before_script:
+  - psql -U postgres -c "create user cashbook password 'cashbook-secret'"
+  - psql -U postgres -c "create database cashbook owner cashbook"
+
+services:
+  - postgresql
+addons:
+  postgresql: "9.5"
