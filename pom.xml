@@ -141,10 +141,29 @@
 				<directory>src/main/resources</directory>
 			</resource>
 			<resource>
+				<directory>src/main/web</directory>
+			</resource>
+			<resource>
 				<directory>${project.build.directory}/generated-resources/jooq</directory>
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>web-build</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<executable>./web-build.sh</executable>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

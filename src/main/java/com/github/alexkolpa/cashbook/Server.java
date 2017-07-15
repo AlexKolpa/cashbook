@@ -1,15 +1,17 @@
 package com.github.alexkolpa.cashbook;
 
+import java.io.File;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import com.github.alexkolpa.cashbook.db.DBMigrator;
 import com.github.alexkolpa.cashbook.db.JooqModule;
 import com.github.alexkolpa.cashbook.endpoints.ApiModule;
+import com.github.alexkolpa.cashbook.endpoints.HttpStaticFileServerHandler;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -81,11 +83,22 @@ public class Server {
 		nettyService = new NettyJaxrsServer();
 		nettyService.setDeployment(deployment);
 		nettyService.setPort(PORT);
+		nettyService.setHttpChannelHandlers(
+				Collections.singletonList(new HttpStaticFileServerHandler(getRootWebDir())));
 
 		nettyService.start();
 		ResteasyProviderFactory providerFactory = deployment.getProviderFactory();
 		Registry registry = deployment.getRegistry();
 		ModuleProcessor processor = new ModuleProcessor(registry, providerFactory);
 		processor.processInjector(injector);
+	}
+
+	private File getRootWebDir() {
+		File root = new File("target/web");
+		if (!root.exists()) {
+			root = new File("web");
+		}
+		Preconditions.checkArgument(root.exists(), "Resource folder could not be found: %s", root);
+		return root;
 	}
 }
